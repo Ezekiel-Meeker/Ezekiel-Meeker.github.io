@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Template Selector</title>
+    <!-- Add Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add React and ReactDOM -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Add Babel for JSX support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.20/babel.min.js"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="container mx-auto py-10 px-4"></div>
+
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        const IncidentTemplateSelector = () => {
+          const [stage, setStage] = useState('');
+          const [templateType, setTemplateType] = useState('');
+          const [selectedTemplate, setSelectedTemplate] = useState('');
+          const [customizedTemplate, setCustomizedTemplate] = useState('');
+          const [copied, setCopied] = useState(false);
+          const textAreaRef = useRef(null);
+          
+          // Soft grey palette that complements dark colors
+          const colors = {
+            background: 'bg-gray-100',
+            card: 'bg-white',
+            border: 'border-gray-300',
+            primary: 'bg-gray-700',
+            primaryHover: 'bg-gray-800',
+            text: 'text-gray-800',
+            textSecondary: 'text-gray-600',
+            textLight: 'text-gray-500',
+            accent: 'bg-gray-200',
+            button: 'bg-gray-600',
+            buttonHover: 'bg-gray-700',
+            focus: 'ring-gray-500'
+          };
+
+          // Template data organized by stages
+          const templateData = {
+            'initial': {
+              name: 'Initial Detection & Acknowledgment',
+              templates: {
+                'issue-acknowledgment': {
+                  name: 'Initial Issue Acknowledgment',
+                  content: 'We are receiving reports of [issue description] across [scope]. Our team is investigating and we will provide further updates shortly.'
+                },
+                'issue-confirmation': {
+                  name: 'Initial Issue Confirmation',
+                  content: 'We have confirmed an issue affecting [affected components], causing [specific symptoms]. This impact includes [specific impacted services] and is affecting [additional impacts]. Our team is investigating and we will provide additional information soon.'
+                },
+                'specific-service': {
+                  name: 'Specific Service Issue Detection',
+                  content: 'We are currently experiencing [issue description] with [service name]. Our engineering team has identified the issue and [current action]. We are actively monitoring the situation to ensure a smooth experience. Thank you for your patience!'
+                },
+                'third-party': {
+                  name: 'Third-Party Service Degradation',
+                  content: 'Our teams are aware of a degradation of [third-party service] services. This impacts [description of affected integrations]. [Description of specific impact behaviors]. We will keep you informed when we learn more.'
+                },
+                'update-promise': {
+                  name: 'Short-term Update Promise',
+                  content: 'We will provide further updates in the next [timeframe] or when we have new information to share.'
+                }
+              }
+            },
+            'investigation': {
+              name: 'Investigation & Ongoing Updates',
+              templates: {
+                'ongoing-investigation': {
+                  name: 'Ongoing Investigation',
+                  content: 'Our team is actively working to resolve the [issue description]. The main impact is on [location/component], causing [specific symptoms] for [affected users]. Impact on [other components] should be minimal, but please let us know if you encounter any issues elsewhere. We appreciate your patience and will provide updates as soon as we have more information.'
+                },
+                'additional-impact': {
+                  name: 'Additional Impact Confirmation',
+                  content: 'We have confirmed additional impact to [newly affected components] - at this time, [expanded scope of impact]. Our team is working to find a root cause and we will provide additional information as the investigation progresses.'
+                },
+                'issue-clarification': {
+                  name: 'Issue Clarification',
+                  content: 'We would like to clarify that while we mentioned [specific component] as the primary location of the impact, it\'s important to note that [clarification of relationships between services]. As a result, [expanded scope] may still experience issues if [condition]. If you are [alternative workflow], we recommend that [workaround]. We\'re working on [next steps].'
+                },
+                'workaround': {
+                  name: 'Temporary Workaround Suggestion',
+                  content: 'If you are communicating through other channels with an end user experiencing [specific issue], we recommend that they [specific workaround action], which should resolve the [issue] by [explanation of workaround effectiveness].'
+                },
+                'weekend-continuity': {
+                  name: 'Weekend Continuity',
+                  content: 'As we head into the end of the week, [issue status update]. Our work to restore full functionality will continue over the weekend, and we will provide further updates on the status of our investigation when business hours resume at the start of next week. We greatly appreciate your continued patience.'
+                },
+                'multiple-issues': {
+                  name: 'Multiple Issues Clarification',
+                  content: 'While our team continues to work to fully resolve the [primary issue] affecting [affected users], we wanted to clarify that this issue is unrelated to the recently discovered [secondary issue]. We thank you for your patience as we work to resolve both issues.'
+                }
+              }
+            },
+            'recovery': {
+              name: 'Partial Recovery Updates',
+              templates: {
+                'partial-recovery': {
+                  name: 'Partial Recovery Update',
+                  content: 'We are beginning to see recovery in the [issue description] across [scope], and [service] is once again able to [restored functionality]. We will continue to monitor the situation to ensure full resolution.'
+                },
+                'lingering-issues': {
+                  name: 'Ongoing Monitoring with Lingering Issues',
+                  content: 'While we continue to monitor our recovery, we have noted some [components] which are [status - e.g., restarting more slowly than others]. Some intermittent [symptoms] may be expected as we work to fully resolve the issue.'
+                },
+                'controlled-recovery': {
+                  name: 'Controlled Recovery',
+                  content: 'Our team continues to work on restoring traffic to affected services in a controlled manner to ensure no further issues or degradation returns. Some intermittent [symptoms] may be seen attempting to [specific actions], and we will post further updates as we move to fully resolve the issues seen today.'
+                },
+                'progress': {
+                  name: 'Progress Toward Resolution',
+                  content: 'We are seeing additional services restored to full functionality and continue to move in a positive direction toward full resolution. Our team will extend their monitoring to ensure that no further [symptoms] are encountered.'
+                },
+                'majority-recovery': {
+                  name: 'Majority Recovery with Lingering Issues',
+                  content: 'While the majority of affected functionality has recovered, we are still working to address some lingering symptoms following the [original issue]. At this time, some [specific components] may still be encountering intermittent [symptoms]. We will provide additional updates in the next [timeframe] or when we have new information to share.'
+                }
+              }
+            },
+            'resolution': {
+              name: 'Resolution',
+              templates: {
+                'full-resolution': {
+                  name: 'Full Resolution',
+                  content: 'We are happy to report that the [issue description] has been resolved, and [service/functionality] has returned to normal. Thank you for your patience during our investigation.'
+                },
+                'resolution-details': {
+                  name: 'Resolution with Implementation Details',
+                  content: 'We have identified the issue with [affected service] and have successfully [solution implementation - e.g., rolled back the problematic deploy]. Please let us know if you continue to see any issues.'
+                },
+                'post-weekend': {
+                  name: 'Post-Weekend Resolution',
+                  content: 'After continuing our work and monitoring through the weekend we are confident that the [issue] has been resolved, and no further [symptoms] will arise. In the interest of caution, we\'re going to keep this incident in monitoring status for the time being as we continue to ensure sustained stability. We apologize for the disruption this may have caused, and thank you for your patience during our investigation.'
+                },
+                'third-party-resolution': {
+                  name: 'Third-Party Resolution',
+                  content: 'We are happy to report that [third-party] has resolved their service degradation. Our engineers have [recovery action taken]; however, due to the nature of the issue [limitations of recovery]. Thanks for your patience during this incident.'
+                },
+                'interim-summary': {
+                  name: 'Interim Summary',
+                  content: 'Between [start time] and [end time] [date], [affected service] experienced an issue where [symptom description]. The issue has been addressed and [service/functionality] should function as expected at this time.'
+                }
+              }
+            },
+            'followup': {
+              name: 'Post-Incident Follow-up',
+              templates: {
+                'post-mortem': {
+                  name: 'Post-Mortem Reference',
+                  content: 'For current system status information and specific impacts to your account, visit our system status page. You can follow this article to be notified when our post-mortem report is published. If you have additional questions about this incident, contact customer support.'
+                }
+              }
+            }
+          };
+
+          // Handle stage selection
+          const handleStageChange = (e) => {
+            setStage(e.target.value);
+            setTemplateType('');
+            setSelectedTemplate('');
+            setCustomizedTemplate('');
+          };
+
+          // Handle template type selection
+          const handleTemplateTypeChange = (e) => {
+            setTemplateType(e.target.value);
+            const template = templateData[stage].templates[e.target.value].content;
+            setSelectedTemplate(template);
+            setCustomizedTemplate(template);
+          };
+
+          // Handle template customization
+          const handleTemplateChange = (e) => {
+            setCustomizedTemplate(e.target.value);
+          };
+
+          // Copy template to clipboard
+          const copyToClipboard = () => {
+            if (textAreaRef.current) {
+              textAreaRef.current.select();
+              document.execCommand('copy');
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }
+          };
+
+          return (
+            <div className={`w-full max-w-4xl p-6 mx-auto ${colors.card} rounded-lg shadow-lg border ${colors.border}`}>
+              <h2 className={`text-2xl font-bold mb-6 ${colors.text}`}>Incident Communication Template Selector</h2>
+              
+              <div className="mb-6">
+                <label className={`block text-sm font-medium mb-2 ${colors.textSecondary}`}>1. Select Incident Stage:</label>
+                <select 
+                  value={stage}
+                  onChange={handleStageChange}
+                  className={`w-full p-2 border ${colors.border} rounded-md shadow-sm ${colors.accent} focus:ring-2 focus:${colors.focus} focus:border-gray-500`}
+                >
+                  <option value="">-- Select Stage --</option>
+                  {Object.keys(templateData).map(key => (
+                    <option key={key} value={key}>{templateData[key].name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {stage && (
+                <div className="mb-6">
+                  <label className={`block text-sm font-medium mb-2 ${colors.textSecondary}`}>2. Select Template Type:</label>
+                  <select 
+                    value={templateType}
+                    onChange={handleTemplateTypeChange}
+                    className={`w-full p-2 border ${colors.border} rounded-md shadow-sm ${colors.accent} focus:ring-2 focus:${colors.focus} focus:border-gray-500`}
+                  >
+                    <option value="">-- Select Template Type --</option>
+                    {Object.keys(templateData[stage].templates).map(key => (
+                      <option key={key} value={key}>{templateData[stage].templates[key].name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {templateType && (
+                <div className="mb-6">
+                  <label className={`block text-sm font-medium mb-2 ${colors.textSecondary}`}>3. Customize Template:</label>
+                  <p className={`text-xs ${colors.textLight} mb-2`}>Replace placeholder text in [brackets] with your specific information</p>
+                  <textarea 
+                    ref={textAreaRef}
+                    value={customizedTemplate}
+                    onChange={handleTemplateChange}
+                    rows={8}
+                    className={`w-full p-3 border ${colors.border} rounded-md shadow-sm focus:ring-2 focus:${colors.focus} focus:border-gray-500 ${colors.accent} bg-opacity-50`}
+                    placeholder="Customize your template here..."
+                  />
+                  <div className="mt-2 flex justify-end">
+                    <button 
+                      onClick={copyToClipboard}
+                      className={`px-4 py-2 ${colors.button} text-white rounded-md hover:${colors.buttonHover} focus:outline-none focus:ring-2 focus:${colors.focus} focus:ring-offset-2 transition duration-150 ease-in-out`}
+                    >
+                      {copied ? 'Copied!' : 'Copy to Clipboard'}
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Usage Guidelines section has been removed as requested */}
+            </div>
+          );
+        };
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<IncidentTemplateSelector />);
+    </script>
+</body>
+</html>
